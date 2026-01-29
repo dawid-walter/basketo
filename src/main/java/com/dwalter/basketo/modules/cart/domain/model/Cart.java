@@ -1,5 +1,6 @@
 package com.dwalter.basketo.modules.cart.domain.model;
 
+import com.dwalter.basketo.modules.cart.domain.events.CartCheckedOutEvent;
 import com.dwalter.basketo.shared.domain.AggregateRoot;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +14,12 @@ public class Cart extends AggregateRoot {
 
     public Cart(UUID id) {
         this.id = id;
+    }
+
+    public void checkout(UUID orderId) {
+        // Logic to clear items or mark status could go here
+        // For now, we just emit the event
+        registerEvent(new CartCheckedOutEvent(this.id, orderId));
     }
 
     public void addItems(List<CartItem> newItems) {

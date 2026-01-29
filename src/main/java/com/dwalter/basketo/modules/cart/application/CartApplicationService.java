@@ -5,6 +5,7 @@ import com.dwalter.basketo.modules.cart.domain.model.CartItem;
 import com.dwalter.basketo.modules.cart.domain.model.Price;
 import com.dwalter.basketo.modules.cart.domain.ports.CartRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ public class CartApplicationService {
 
     private final CartRepository cartRepository;
     private final com.dwalter.basketo.modules.cart.domain.ports.OrderingGateway orderingGateway;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public UUID initializeCart(List<CartItemCommand> items, String userEmail) {
@@ -48,7 +50,15 @@ public class CartApplicationService {
             throw new IllegalStateException("Cart has no user assigned");
         }
 
-        return orderingGateway.createOrder(cart.getUserEmail(), cart.getItems());
+        UUID orderId = orderingGateway.createOrder(cart.getUserEmail(), cart.getItems());
+        
+        cart.checkout(orderId);
+        cartRepository.save(cart); // Save potential state changes (if any)
+        
+        cart.getDomainEvents().forEach(eventPublisher::publishEvent);
+        cart.clearDomainEvents();
+
+        return orderId;
     }
 
     private CartItem toDomainItem(CartItemCommand cmd) {
