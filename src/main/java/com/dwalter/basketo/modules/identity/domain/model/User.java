@@ -38,4 +38,15 @@ public class User extends AggregateRoot {
     public Email getEmail() {
         return email;
     }
+
+    public OneTimePin getCurrentPin() {
+        return currentPin;
+    }
+
+    // Reconstruction from DB
+    public static User restore(UUID id, Email email, OneTimePin pin) {
+        User user = new User(id, email);
+        user.currentPin = pin;
+        return user;
+    }
 }
