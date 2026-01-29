@@ -21,6 +21,11 @@ Basketo is a backend service providing a streamlined shopping cart and checkout 
 - **Identity**: Handles temporary accounts and PIN-based authentication.
 - **Payment**: Integrates with payment providers (Przelewy24, Stripe).
 
+## API Documentation
+Once the application is running, you can access the interactive Swagger UI documentation at:
+- [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs) (JSON spec)
+
 ## API Endpoints
 
 ### Cart
