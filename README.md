@@ -29,7 +29,10 @@ Basketo is a backend service providing a streamlined shopping cart and checkout 
 
 ### Auth (Identity)
 - `POST /api/auth/login`: Request a new PIN for an email.
-- `POST /api/auth/verify`: Verify a PIN.
+- `POST /api/auth/verify`: Verify a PIN and receive a **JWT Access Token**.
+
+### Ordering
+- `GET /api/orders`: Get list of orders for the authenticated user (Requires `Authorization: Bearer <token>`).
 
 ### Payment
 - `POST /api/payments/webhook/{paymentId}`: Simulate a payment success callback.
@@ -38,14 +41,12 @@ Basketo is a backend service providing a streamlined shopping cart and checkout 
 
 ### Requirements
 - Java 25
-- PostgreSQL (or H2 for local testing by changing `application.properties`)
+- Docker (for PostgreSQL)
 
 ### Configuration
-Update `src/main/resources/application.properties` with your database credentials:
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/basketo
-spring.datasource.username=your_user
-spring.datasource.password=your_password
+Update `src/main/resources/application.properties` with your database credentials or run:
+```bash
+docker-compose up -d
 ```
 
 ### Running the App
@@ -62,8 +63,16 @@ spring.datasource.password=your_password
    ```bash
    curl -X POST http://localhost:8080/api/carts/{CART_ID}/checkout
    ```
-3. **Check Logs**: Find the PIN and Payment Link in the application logs.
-4. **Complete Payment**:
+3. **Get PIN & Verify**: Check logs for PIN.
+   ```bash
+   curl -X POST http://localhost:8080/api/auth/verify -H "Content-Type: application/json" -d '{"email": "test@example.com", "pin": "123456"}'
+   # Response: {"success":true, "accessToken":"eyJhbGciOi..."}
+   ```
+4. **Check Orders**:
+   ```bash
+   curl -X GET http://localhost:8080/api/orders -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
+   ```
+5. **Complete Payment**:
    ```bash
    curl -X POST http://localhost:8080/api/payments/webhook/{PAYMENT_ID}
    ```
