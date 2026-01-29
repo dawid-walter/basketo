@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class IdentityApplicationServiceTest {
 
@@ -23,6 +23,8 @@ class IdentityApplicationServiceTest {
     void setUp() {
         userRepository = new InMemoryUserRepository();
         notificationSender = new FakeNotificationSender();
+        // Null for JwtUtils as we test logic unrelated to JWT here (or we mock it if needed)
+        // Since IdentityApplicationService doesn't depend on JwtUtils (AuthController does), we are fine.
         service = new IdentityApplicationService(userRepository, notificationSender);
     }
 
@@ -35,9 +37,15 @@ class IdentityApplicationServiceTest {
         service.requestLoginPin(email);
 
         // then
-        assertTrue(userRepository.findByEmail(new Email(email)).isPresent());
-        assertNotNull(notificationSender.lastSentPin);
-        assertEquals(new Email(email), notificationSender.lastSentEmail);
+        assertThat(userRepository.findByEmail(new Email(email)))
+                .isPresent();
+        
+        assertThat(notificationSender.lastSentPin)
+                .isNotNull()
+                .hasSize(6); // PIN is 6 digits
+        
+        assertThat(notificationSender.lastSentEmail)
+                .isEqualTo(new Email(email));
     }
 
     @Test
@@ -51,7 +59,7 @@ class IdentityApplicationServiceTest {
         boolean isVerified = service.verifyPin(email, sentPin);
 
         // then
-        assertTrue(isVerified);
+        assertThat(isVerified).isTrue();
     }
 
     @Test
@@ -64,10 +72,10 @@ class IdentityApplicationServiceTest {
         boolean isVerified = service.verifyPin(email, "000000");
 
         // then
-        assertFalse(isVerified);
+        assertThat(isVerified).isFalse();
     }
 
-    // --- Fakes (In-place for simplicity of the test) ---
+    // --- Fakes ---
 
     private static class InMemoryUserRepository implements UserRepository {
         private final Map<Email, User> users = new HashMap<>();
@@ -84,7 +92,6 @@ class IdentityApplicationServiceTest {
     }
 
     private static class FakeNotificationSender implements NotificationSender {
-        String lastSentEmailValue;
         Email lastSentEmail;
         String lastSentPin;
 

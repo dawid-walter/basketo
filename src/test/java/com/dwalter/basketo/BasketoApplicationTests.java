@@ -1,10 +1,8 @@
 package com.dwalter.basketo;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class BasketoApplicationTests {
+class BasketoApplicationTests extends AbstractIntegrationTest {
 
     @Test
     void contextLoads() {
