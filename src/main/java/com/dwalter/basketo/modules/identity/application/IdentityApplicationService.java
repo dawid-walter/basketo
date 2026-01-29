@@ -1,11 +1,10 @@
 package com.dwalter.basketo.modules.identity.application;
 
-import com.dwalter.basketo.modules.identity.domain.events.PinGeneratedEvent;
 import com.dwalter.basketo.modules.identity.domain.model.Email;
 import com.dwalter.basketo.modules.identity.domain.model.User;
-import com.dwalter.basketo.modules.identity.domain.ports.NotificationSender;
 import com.dwalter.basketo.modules.identity.domain.ports.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class IdentityApplicationService {
     private final UserRepository userRepository;
-    private final NotificationSender notificationSender;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void requestLoginPin(String emailValue) {
@@ -29,11 +28,7 @@ public class IdentityApplicationService {
         user.generateNewPin();
         userRepository.save(user);
 
-        user.getDomainEvents().stream()
-                .filter(PinGeneratedEvent.class::isInstance)
-                .map(PinGeneratedEvent.class::cast)
-                .forEach(event -> notificationSender.sendPin(event.email(), event.pin()));
-        
+        user.getDomainEvents().forEach(eventPublisher::publishEvent);
         user.clearDomainEvents();
     }
 

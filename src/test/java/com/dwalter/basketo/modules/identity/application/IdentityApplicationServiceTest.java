@@ -1,13 +1,16 @@
 package com.dwalter.basketo.modules.identity.application;
 
+import com.dwalter.basketo.modules.identity.domain.events.PinGeneratedEvent;
 import com.dwalter.basketo.modules.identity.domain.model.Email;
 import com.dwalter.basketo.modules.identity.domain.model.User;
-import com.dwalter.basketo.modules.identity.domain.ports.NotificationSender;
 import com.dwalter.basketo.modules.identity.domain.ports.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -17,19 +20,17 @@ class IdentityApplicationServiceTest {
 
     private IdentityApplicationService service;
     private InMemoryUserRepository userRepository;
-    private FakeNotificationSender notificationSender;
+    private FakeEventPublisher eventPublisher;
 
     @BeforeEach
     void setUp() {
         userRepository = new InMemoryUserRepository();
-        notificationSender = new FakeNotificationSender();
-        // Null for JwtUtils as we test logic unrelated to JWT here (or we mock it if needed)
-        // Since IdentityApplicationService doesn't depend on JwtUtils (AuthController does), we are fine.
-        service = new IdentityApplicationService(userRepository, notificationSender);
+        eventPublisher = new FakeEventPublisher();
+        service = new IdentityApplicationService(userRepository, eventPublisher);
     }
 
     @Test
-    void shouldRegisterUserAndSendPinWhenRequestingLogin() {
+    void shouldRegisterUserAndPublishPinGeneratedEventWhenRequestingLogin() {
         // given
         String email = "test@example.com";
 
@@ -40,12 +41,10 @@ class IdentityApplicationServiceTest {
         assertThat(userRepository.findByEmail(new Email(email)))
                 .isPresent();
         
-        assertThat(notificationSender.lastSentPin)
-                .isNotNull()
-                .hasSize(6); // PIN is 6 digits
-        
-        assertThat(notificationSender.lastSentEmail)
-                .isEqualTo(new Email(email));
+        PinGeneratedEvent event = eventPublisher.getLastEvent(PinGeneratedEvent.class);
+        assertThat(event).isNotNull();
+        assertThat(event.pin()).hasSize(6);
+        assertThat(event.email()).isEqualTo(new Email(email));
     }
 
     @Test
@@ -53,7 +52,7 @@ class IdentityApplicationServiceTest {
         // given
         String email = "test@example.com";
         service.requestLoginPin(email);
-        String sentPin = notificationSender.lastSentPin;
+        String sentPin = eventPublisher.getLastEvent(PinGeneratedEvent.class).pin();
 
         // when
         boolean isVerified = service.verifyPin(email, sentPin);
@@ -91,14 +90,20 @@ class IdentityApplicationServiceTest {
         }
     }
 
-    private static class FakeNotificationSender implements NotificationSender {
-        Email lastSentEmail;
-        String lastSentPin;
+    private static class FakeEventPublisher implements ApplicationEventPublisher {
+        private final List<Object> events = new ArrayList<>();
 
         @Override
-        public void sendPin(Email email, String pin) {
-            this.lastSentEmail = email;
-            this.lastSentPin = pin;
+        public void publishEvent(Object event) {
+            events.add(event);
+        }
+
+        public <T> T getLastEvent(Class<T> type) {
+            return events.stream()
+                    .filter(type::isInstance)
+                    .map(type::cast)
+                    .reduce((first, second) -> second)
+                    .orElse(null);
         }
     }
 }
