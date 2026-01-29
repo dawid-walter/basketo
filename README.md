@@ -42,6 +42,11 @@ Once the application is running, you can access the interactive Swagger UI docum
 ### Payment
 - `POST /api/payments/webhook/{paymentId}`: Simulate a payment success callback.
 
+## Monitoring (Actuator)
+- `GET /actuator/health`: Check application health and database connection status.
+- `GET /actuator/metrics`: View application metrics.
+- `GET /actuator/info`: Application information.
+
 ## Development Setup
 
 ### Requirements
