@@ -8,6 +8,8 @@ import com.dwalter.basketo.modules.ordering.domain.ports.OrderRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +25,7 @@ class ShoppingFlowIntegrationTest extends AbstractIntegrationTest {
     private OrderRepository orderRepository;
 
     @Test
+    @Transactional
     void shouldCreateOrderFromCart() {
         // given
         String email = "integration@test.com";
