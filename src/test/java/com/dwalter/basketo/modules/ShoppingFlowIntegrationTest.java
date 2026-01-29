@@ -42,7 +42,7 @@ class ShoppingFlowIntegrationTest extends AbstractIntegrationTest {
         List<Order> orders = orderRepository.findByUserEmail(email);
         assertThat(orders).hasSize(1);
         
-        Order order = orders.get(0);
+        Order order = orders.getFirst();
         assertThat(order.getId()).isEqualTo(orderId);
         assertThat(order.totalAmount()).isEqualByComparingTo(new BigDecimal("200.00")); // 2 * 100
     }

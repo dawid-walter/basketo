@@ -54,7 +54,7 @@ public class Order extends AggregateRoot {
     }
 
     public String currency() {
-        return items.isEmpty() ? "PLN" : items.get(0).currency();
+        return items.isEmpty() ? "PLN" : items.getFirst().currency();
     }
 
     public void markAsPaid() {

@@ -84,6 +84,6 @@ class OrderApplicationServiceTest {
 
         // then
         assertThat(orders).hasSize(1);
-        assertThat(orders.get(0)).isEqualTo(order);
+        assertThat(orders.getFirst()).isEqualTo(order);
     }
 }
