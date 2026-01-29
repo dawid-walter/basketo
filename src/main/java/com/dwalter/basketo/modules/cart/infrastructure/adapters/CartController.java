@@ -1,7 +1,11 @@
 package com.dwalter.basketo.modules.cart.infrastructure.adapters;
 
-import com.dwalter.basketo.modules.cart.application.CartApplicationService;
-import com.dwalter.basketo.modules.cart.application.CartApplicationService.CartItemCommand;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +23,7 @@ class CartController {
     private final CartApplicationService cartService;
 
     @PostMapping("/init")
-    public ResponseEntity<InitCartResponse> initCart(@RequestBody InitCartRequest request) {
+    public ResponseEntity<InitCartResponse> initCart(@Valid @RequestBody InitCartRequest request) {
         List<CartItemCommand> commands = request.items.stream()
                 .map(item -> new CartItemCommand(
                         item.productId(),
@@ -41,8 +45,19 @@ class CartController {
         return ResponseEntity.ok(new CheckoutResponse(orderId));
     }
 
-    record InitCartRequest(String userEmail, List<CartItemDto> items) {}
-    record CartItemDto(UUID productId, String productName, int quantity, BigDecimal price, String currency) {}
+    record InitCartRequest(
+            @NotBlank @Email String userEmail,
+            @NotEmpty List<@Valid CartItemDto> items
+    ) {}
+
+    record CartItemDto(
+            @NotNull UUID productId,
+            @NotBlank String productName,
+            @Positive int quantity,
+            @NotNull @Positive BigDecimal price,
+            @NotBlank String currency
+    ) {}
+
     record InitCartResponse(UUID cartId) {}
     record CheckoutResponse(UUID orderId) {}
 }

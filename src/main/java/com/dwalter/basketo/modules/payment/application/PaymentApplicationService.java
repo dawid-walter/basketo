@@ -20,6 +20,10 @@ public class PaymentApplicationService {
 
     @Transactional
     public void initPayment(UUID orderId, BigDecimal amount, String currency) {
+        if (paymentRepository.findByOrderId(orderId).isPresent()) {
+            return; // Payment already initiated for this order
+        }
+
         Payment payment = new Payment(UUID.randomUUID(), orderId, amount, currency);
         paymentRepository.save(payment);
         

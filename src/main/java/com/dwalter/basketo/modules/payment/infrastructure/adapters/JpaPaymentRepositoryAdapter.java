@@ -25,9 +25,11 @@ class JpaPaymentRepositoryAdapter implements PaymentRepository {
     }
 
     @Override
-    public Optional<Payment> findById(UUID id) {
-        return repository.findById(id).map(e -> 
-            Payment.restore(e.getId(), e.getOrderId(), e.getAmount(), e.getCurrency(), e.getStatus())
+    public Optional<Payment> findByOrderId(UUID orderId) {
+        return repository.findByOrderId(orderId).map(e ->
+                Payment.restore(e.getId(), e.getOrderId(), e.getAmount(), e.getCurrency(), e.getStatus())
         );
     }
+
+    private java.time.Instant now() {
 }
