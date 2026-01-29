@@ -34,4 +34,12 @@ public class Cart extends AggregateRoot {
     public String getUserEmail() {
         return userEmail;
     }
+
+    // Restore from Persistence
+    public static Cart restore(UUID id, String userEmail, List<CartItem> items) {
+        Cart cart = new Cart(id);
+        cart.userEmail = userEmail;
+        cart.items.addAll(items);
+        return cart;
+    }
 }
