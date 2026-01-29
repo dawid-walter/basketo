@@ -34,7 +34,12 @@ Once the application is running, you can access the interactive Swagger UI docum
 
 ### Auth (Identity)
 - `POST /api/auth/login`: Request a new PIN for an email.
-- `POST /api/auth/verify`: Verify a PIN and receive a **JWT Access Token**.
+- `POST /api/auth/verify`: Verify a PIN and receive a **JWT Access Token** (User Role).
+
+### Admin Panel
+- `POST /api/admin/login`: Login as Administrator. Returns JWT with `ROLE_ADMIN`.
+- `POST /api/admin/change-password`: Change admin password.
+- `GET /api/admin/orders`: List all orders in the system (CQRS Read Model).
 
 ### Ordering
 - `GET /api/orders`: Get list of orders for the authenticated user (Requires `Authorization: Bearer <token>`).
@@ -52,6 +57,10 @@ Once the application is running, you can access the interactive Swagger UI docum
 ### Requirements
 - Java 25
 - Docker (for PostgreSQL)
+
+### Default Admin Account
+- **Email**: `admin@basketo.com`
+- **Password**: `admin123` (Created automatically on first start)
 
 ### Configuration
 Update `src/main/resources/application.properties` with your database credentials or run:
@@ -78,11 +87,20 @@ docker-compose up -d
    curl -X POST http://localhost:8080/api/auth/verify -H "Content-Type: application/json" -d '{"email": "test@example.com", "pin": "123456"}'
    # Response: {"success":true, "accessToken":"eyJhbGciOi..."}
    ```
-4. **Check Orders**:
+4. **Check User Orders**:
    ```bash
-   curl -X GET http://localhost:8080/api/orders -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
+   curl -X GET http://localhost:8080/api/orders -H "Authorization: Bearer <USER_TOKEN>"
    ```
-5. **Complete Payment**:
+5. **Admin Login & Check All Orders**:
+   ```bash
+   # Login
+   curl -X POST http://localhost:8080/api/admin/login -H "Content-Type: application/json" -d '{"email": "admin@basketo.com", "password": "admin123"}'
+   # Get Token -> <ADMIN_TOKEN>
+   
+   # List Orders
+   curl -X GET http://localhost:8080/api/admin/orders -H "Authorization: Bearer <ADMIN_TOKEN>"
+   ```
+6. **Complete Payment**:
    ```bash
    curl -X POST http://localhost:8080/api/payments/webhook/{PAYMENT_ID}
    ```
