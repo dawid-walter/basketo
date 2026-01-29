@@ -4,6 +4,7 @@ import com.dwalter.basketo.modules.ordering.application.OrderApplicationService;
 import com.dwalter.basketo.modules.ordering.domain.model.Order;
 import com.dwalter.basketo.modules.ordering.domain.model.OrderItem;
 import com.dwalter.basketo.modules.ordering.domain.model.OrderStatus;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,10 @@ class OrderController {
     private final OrderApplicationService orderService;
 
     @GetMapping
-    public List<OrderResponse> getOrders(@RequestParam String email) {
+    public List<OrderResponse> getOrders(HttpServletRequest request) {
+        String email = (String) request.getAttribute("userEmail");
+        // Optional: validate if email is not null (though filter ensures it)
+        
         return orderService.getUserOrders(email).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());

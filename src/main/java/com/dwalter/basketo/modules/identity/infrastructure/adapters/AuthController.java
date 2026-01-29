@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 class AuthController {
 
     private final IdentityApplicationService identityService;
+    private final JwtUtils jwtUtils;
 
     @PostMapping("/login")
     public ResponseEntity<Void> login(@RequestBody LoginRequest request) {
@@ -21,10 +22,14 @@ class AuthController {
     @PostMapping("/verify")
     public ResponseEntity<VerifyResponse> verify(@RequestBody VerifyRequest request) {
         boolean isValid = identityService.verifyPin(request.email(), request.pin());
-        return ResponseEntity.ok(new VerifyResponse(isValid));
+        if (isValid) {
+            String token = jwtUtils.generateToken(request.email());
+            return ResponseEntity.ok(new VerifyResponse(true, token));
+        }
+        return ResponseEntity.status(401).body(new VerifyResponse(false, null));
     }
 
     record LoginRequest(String email) {}
     record VerifyRequest(String email, String pin) {}
-    record VerifyResponse(boolean success) {}
+    record VerifyResponse(boolean success, String accessToken) {}
 }
