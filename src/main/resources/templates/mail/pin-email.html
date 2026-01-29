@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; }
+        .pin { font-size: 32px; font-weight: bold; color: #2c3e50; letter-spacing: 5px; margin: 20px 0; }
+        .footer { font-size: 12px; color: #777; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Your Basketo Login PIN</h2>
+        <p>Hello,</p>
+        <p>You requested a login PIN for your temporary account. Please use the code below to sign in:</p>
+        <div class="pin" th:text="${pin}">123456</div>
+        <p>This code is valid for 15 minutes.</p>
+        <div class="footer">
+            If you didn't request this, please ignore this email.
+        </div>
+    </div>
+</body>
+</html>
