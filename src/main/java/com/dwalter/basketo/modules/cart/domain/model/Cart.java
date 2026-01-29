@@ -1,0 +1,37 @@
+package com.dwalter.basketo.modules.cart.domain.model;
+
+import com.dwalter.basketo.shared.domain.AggregateRoot;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+public class Cart extends AggregateRoot {
+    private final UUID id;
+    private final List<CartItem> items = new ArrayList<>();
+    private String userEmail;
+
+    public Cart(UUID id) {
+        this.id = id;
+    }
+
+    public void addItems(List<CartItem> newItems) {
+        this.items.addAll(newItems);
+    }
+
+    public void assignUser(String email) {
+        this.userEmail = email;
+    }
+
+    public List<CartItem> getItems() {
+        return Collections.unmodifiableList(items);
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+}
