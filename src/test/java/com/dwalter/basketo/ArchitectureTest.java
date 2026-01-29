@@ -16,7 +16,7 @@ public class ArchitectureTest {
             .consideringOnlyDependenciesInAnyPackage("com.dwalter.basketo..")
             .layer("Domain").definedBy("..domain..")
             .layer("Application").definedBy("..application..")
-            .layer("Infrastructure").definedBy("..infrastructure..")
+            .layer("Infrastructure").definedBy("..infrastructure..", "..query..")
             
             .whereLayer("Domain").mayOnlyBeAccessedByLayers("Application", "Infrastructure")
             .whereLayer("Application").mayOnlyBeAccessedByLayers("Infrastructure")

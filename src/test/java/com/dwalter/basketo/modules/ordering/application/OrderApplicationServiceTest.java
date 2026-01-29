@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,14 +46,36 @@ class OrderApplicationServiceTest {
         when(clock.getZone()).thenReturn(ZoneId.of("UTC"));
 
         String email = "test@example.com";
-// ...
+        OrderItemCommand itemCmd = new OrderItemCommand(
+                UUID.randomUUID(), "Product", 2, new BigDecimal("100.00"), "PLN"
+        );
+        CreateOrderCommand command = new CreateOrderCommand(email, List.of(itemCmd));
+
+        // when
+        UUID orderId = service.createOrder(command);
+
+        // then
+        assertThat(orderId).isNotNull();
+
+        // Verify Save
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        
+        Order savedOrder = orderCaptor.getValue();
+        assertThat(savedOrder.getId()).isEqualTo(orderId);
+        assertThat(savedOrder.getUserEmail()).isEqualTo(email);
+
+        // Verify Event
+        ArgumentCaptor<OrderCreatedEvent> eventCaptor = ArgumentCaptor.forClass(OrderCreatedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().orderId()).isEqualTo(orderId);
+    }
+
     @Test
     void shouldGetUserOrders() {
         // given
-        // No clock interaction needed here
-        
         String email = "test@example.com";
-        Order order = Order.create(email, List.of(), Clock.systemUTC()); // Use real clock for test object creation
+        Order order = Order.restore(UUID.randomUUID(), email, List.of(), com.dwalter.basketo.modules.ordering.domain.model.OrderStatus.CREATED, Instant.now());
         when(orderRepository.findByUserEmail(email)).thenReturn(List.of(order));
 
         // when

@@ -1,6 +1,10 @@
 package com.dwalter.basketo.modules.identity.infrastructure.adapters;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +24,7 @@ class AdminAuthController {
     private final JwtUtils jwtUtils;
 
     @PostMapping("/login")
-    public ResponseEntity<AdminLoginResponse> login(@RequestBody AdminLoginRequest request) {
+    public ResponseEntity<AdminLoginResponse> login(@Valid @RequestBody AdminLoginRequest request) {
         return adminRepository.findByEmail(request.email())
                 .filter(admin -> passwordEncoder.matches(request.password(), admin.getPasswordHash()))
                 .map(admin -> {
@@ -31,7 +35,7 @@ class AdminAuthController {
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<Void> changePassword(@RequestBody ChangePasswordRequest request, HttpServletRequest httpRequest) {
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request, HttpServletRequest httpRequest) {
         String role = (String) httpRequest.getAttribute("userRole");
         if (!"ROLE_ADMIN".equals(role)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -51,7 +55,15 @@ class AdminAuthController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    record AdminLoginRequest(String email, String password) {}
+    record AdminLoginRequest(
+            @NotBlank @Email String email,
+            @NotBlank String password
+    ) {}
+
     record AdminLoginResponse(String accessToken) {}
-    record ChangePasswordRequest(String oldPassword, String newPassword) {}
+
+    record ChangePasswordRequest(
+            @NotBlank String oldPassword,
+            @NotBlank @Size(min = 8) String newPassword
+    ) {}
 }

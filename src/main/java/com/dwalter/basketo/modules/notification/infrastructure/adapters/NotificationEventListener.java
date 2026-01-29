@@ -44,5 +44,14 @@ class NotificationEventListener {
                 )
         );
     }
-// ...
 
+    @Async
+    @EventListener
+    public void handle(PaymentCompletedEvent event) {
+        mailSender.send(
+                "user-from-order-" + event.orderId(), 
+                "Payment Received",
+                "Your payment for order #" + event.orderId() + " has been confirmed."
+        );
+    }
+}
