@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class CartApplicationService {
 
     private final CartRepository cartRepository;
+    private final com.dwalter.basketo.modules.cart.domain.ports.OrderingGateway orderingGateway;
 
     @Transactional
     public UUID initializeCart(List<CartItemCommand> items, String userEmail) {
@@ -36,6 +37,18 @@ public class CartApplicationService {
 
         cartRepository.save(cart);
         return cartId;
+    }
+
+    @Transactional
+    public UUID checkoutCart(UUID cartId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new IllegalArgumentException("Cart not found: " + cartId));
+        
+        if (cart.getUserEmail() == null) {
+            throw new IllegalStateException("Cart has no user assigned");
+        }
+
+        return orderingGateway.createOrder(cart.getUserEmail(), cart.getItems());
     }
 
     private CartItem toDomainItem(CartItemCommand cmd) {

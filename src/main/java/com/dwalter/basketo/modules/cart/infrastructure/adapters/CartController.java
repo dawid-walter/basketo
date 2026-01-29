@@ -35,7 +35,14 @@ class CartController {
         return ResponseEntity.ok(new InitCartResponse(cartId));
     }
 
+    @PostMapping("/{cartId}/checkout")
+    public ResponseEntity<CheckoutResponse> checkout(@PathVariable UUID cartId) {
+        UUID orderId = cartService.checkoutCart(cartId);
+        return ResponseEntity.ok(new CheckoutResponse(orderId));
+    }
+
     record InitCartRequest(String userEmail, List<CartItemDto> items) {}
     record CartItemDto(UUID productId, String productName, int quantity, BigDecimal price, String currency) {}
     record InitCartResponse(UUID cartId) {}
+    record CheckoutResponse(UUID orderId) {}
 }
