@@ -33,7 +33,7 @@ class JpaCartRepositoryAdapter implements CartRepository {
         CartJpaEntity entity = new CartJpaEntity(cart.getId(), cart.getUserEmail());
         List<CartItemJpaEntity> itemEntities = cart.getItems().stream()
                 .map(item -> new CartItemJpaEntity(
-                        null,
+                        UUID.randomUUID(),
                         item.productId(),
                         item.productName(),
                         item.quantity(),

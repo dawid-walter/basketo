@@ -5,10 +5,10 @@ import com.dwalter.basketo.modules.ordering.application.OrderApplicationService.
 import com.dwalter.basketo.modules.ordering.domain.events.OrderCreatedEvent;
 import com.dwalter.basketo.modules.ordering.domain.model.Order;
 import com.dwalter.basketo.modules.ordering.domain.ports.OrderRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,18 +33,18 @@ class OrderApplicationServiceTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
-    @Mock
     private Clock clock;
-
-    @InjectMocks
     private OrderApplicationService service;
+
+    @BeforeEach
+    void setUp() {
+        clock = Clock.fixed(Instant.parse("2026-01-01T10:00:00Z"), ZoneId.of("UTC"));
+        service = new OrderApplicationService(orderRepository, eventPublisher, clock);
+    }
 
     @Test
     void shouldCreateOrder() {
         // given
-        when(clock.instant()).thenReturn(Instant.parse("2026-01-01T10:00:00Z"));
-        when(clock.getZone()).thenReturn(ZoneId.of("UTC"));
-
         String email = "test@example.com";
         OrderItemCommand itemCmd = new OrderItemCommand(
                 UUID.randomUUID(), "Product", 2, new BigDecimal("100.00"), "PLN"
@@ -64,6 +64,7 @@ class OrderApplicationServiceTest {
         Order savedOrder = orderCaptor.getValue();
         assertThat(savedOrder.getId()).isEqualTo(orderId);
         assertThat(savedOrder.getUserEmail()).isEqualTo(email);
+        assertThat(savedOrder.getCreatedAt()).isEqualTo(Instant.now(clock));
 
         // Verify Event
         ArgumentCaptor<OrderCreatedEvent> eventCaptor = ArgumentCaptor.forClass(OrderCreatedEvent.class);
@@ -75,7 +76,7 @@ class OrderApplicationServiceTest {
     void shouldGetUserOrders() {
         // given
         String email = "test@example.com";
-        Order order = Order.restore(UUID.randomUUID(), email, List.of(), com.dwalter.basketo.modules.ordering.domain.model.OrderStatus.CREATED, Instant.now());
+        Order order = Order.create(email, List.of(), clock);
         when(orderRepository.findByUserEmail(email)).thenReturn(List.of(order));
 
         // when

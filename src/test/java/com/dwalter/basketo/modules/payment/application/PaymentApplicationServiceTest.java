@@ -5,10 +5,10 @@ import com.dwalter.basketo.modules.payment.domain.model.Payment;
 import com.dwalter.basketo.modules.payment.domain.model.PaymentStatus;
 import com.dwalter.basketo.modules.payment.domain.ports.PaymentGateway;
 import com.dwalter.basketo.modules.payment.domain.ports.PaymentRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
@@ -38,18 +38,18 @@ class PaymentApplicationServiceTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
-    @Mock
     private Clock clock;
-
-    @InjectMocks
     private PaymentApplicationService service;
+
+    @BeforeEach
+    void setUp() {
+        clock = Clock.fixed(Instant.parse("2026-01-01T10:00:00Z"), ZoneId.of("UTC"));
+        service = new PaymentApplicationService(paymentRepository, paymentGateway, eventPublisher, clock);
+    }
 
     @Test
     void shouldInitPayment() {
         // given
-        when(clock.instant()).thenReturn(Instant.parse("2026-01-01T10:00:00Z"));
-        when(clock.getZone()).thenReturn(ZoneId.of("UTC"));
-
         UUID orderId = UUID.randomUUID();
         BigDecimal amount = BigDecimal.TEN;
         String currency = "PLN";
@@ -68,16 +68,14 @@ class PaymentApplicationServiceTest {
         assertThat(savedPayment.getOrderId()).isEqualTo(orderId);
         assertThat(savedPayment.getAmount()).isEqualTo(amount);
         assertThat(savedPayment.getStatus()).isEqualTo(PaymentStatus.PENDING);
+        assertThat(savedPayment.getCreatedAt()).isEqualTo(Instant.now(clock));
     }
 
     @Test
     void shouldHandlePaymentWebhook() {
         // given
-        // Clock stubbing removed as it is not used in handlePaymentWebhook
-        
         UUID paymentId = UUID.randomUUID();
-        // Use real clock for test object
-        Payment payment = new Payment(paymentId, UUID.randomUUID(), BigDecimal.TEN, "PLN", Clock.systemUTC());
+        Payment payment = new Payment(paymentId, UUID.randomUUID(), BigDecimal.TEN, "PLN", clock);
         
         when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
 

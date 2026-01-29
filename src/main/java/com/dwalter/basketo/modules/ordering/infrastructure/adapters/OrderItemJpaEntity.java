@@ -17,7 +17,6 @@ import java.util.UUID;
 @AllArgsConstructor
 class OrderItemJpaEntity {
     @Id
-    @GeneratedValue
     private UUID id;
     
     private UUID productId;

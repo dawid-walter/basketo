@@ -1,3 +1,4 @@
+
 --liquibase formatted sql
 
 --changeset dwalter:001-create-users-table

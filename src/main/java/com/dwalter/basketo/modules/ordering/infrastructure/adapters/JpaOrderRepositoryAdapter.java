@@ -38,7 +38,7 @@ class JpaOrderRepositoryAdapter implements OrderRepository {
         OrderJpaEntity entity = new OrderJpaEntity(order.getId(), order.getUserEmail(), order.getStatus(), order.getCreatedAt());
         List<OrderItemJpaEntity> items = order.getItems().stream()
                 .map(item -> new OrderItemJpaEntity(
-                        null,
+                        UUID.randomUUID(),
                         item.productId(),
                         item.productName(),
                         item.quantity(),
