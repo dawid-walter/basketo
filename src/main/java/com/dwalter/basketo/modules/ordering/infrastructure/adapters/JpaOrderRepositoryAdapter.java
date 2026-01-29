@@ -27,6 +27,13 @@ class JpaOrderRepositoryAdapter implements OrderRepository {
         return repository.findById(id).map(this::mapToDomain);
     }
 
+    @Override
+    public List<Order> findByUserEmail(String email) {
+        return repository.findByUserEmail(email).stream()
+                .map(this::mapToDomain)
+                .collect(Collectors.toList());
+    }
+
     private OrderJpaEntity mapToJpa(Order order) {
         OrderJpaEntity entity = new OrderJpaEntity(order.getId(), order.getUserEmail(), order.getStatus(), order.getCreatedAt());
         List<OrderItemJpaEntity> items = order.getItems().stream()

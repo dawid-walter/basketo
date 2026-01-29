@@ -40,6 +40,10 @@ public class OrderApplicationService {
         return order.getId();
     }
 
+    public List<Order> getUserOrders(String email) {
+        return orderRepository.findByUserEmail(email);
+    }
+
     public record CreateOrderCommand(String userEmail, List<OrderItemCommand> items) {}
     public record OrderItemCommand(UUID productId, String productName, int quantity, BigDecimal unitPrice, String currency) {}
 }
