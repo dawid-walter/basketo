@@ -1,6 +1,7 @@
 package com.dwalter.basketo.modules.ordering.domain.model;
 
 import com.dwalter.basketo.modules.ordering.domain.events.OrderCreatedEvent;
+import com.dwalter.basketo.modules.ordering.domain.events.OrderPaidEvent;
 import com.dwalter.basketo.shared.domain.AggregateRoot;
 
 import java.math.BigDecimal;
@@ -61,7 +62,7 @@ public class Order extends AggregateRoot {
             throw new IllegalStateException("Cannot pay for cancelled order");
         }
         this.status = OrderStatus.PAID;
-        // registerEvent(new OrderPaidEvent(...));
+        registerEvent(new OrderPaidEvent(this.id));
     }
 
     public UUID getId() { return id; }

@@ -22,9 +22,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         
-        // Only protect specific endpoints for now (e.g., getting orders)
-        // Public endpoints: /auth/*, /carts/*, /payments/* (webhooks)
-        if (!path.startsWith("/api/orders")) {
+        // Public endpoints: /auth/*, /carts/*, /payments/*, /api/admin/login
+        if (!path.startsWith("/api/orders") && !path.startsWith("/api/admin")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
+        if (path.equals("/api/admin/login")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -37,14 +41,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
         String email = jwtUtils.validateAndGetEmail(token);
+        String role = jwtUtils.getRole(token);
 
         if (email == null) {
             response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid Token");
             return;
         }
 
-        // Pass the email to the controller via request attribute
         request.setAttribute("userEmail", email);
+        request.setAttribute("userRole", role);
         filterChain.doFilter(request, response);
     }
 }
