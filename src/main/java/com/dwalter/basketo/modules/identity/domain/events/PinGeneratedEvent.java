@@ -7,7 +7,5 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record PinGeneratedEvent(UUID eventId, Email email, String pin, Instant occurredAt) implements DomainEvent {
-    public PinGeneratedEvent(Email email, String pin) {
-        this(UUID.randomUUID(), email, pin, Instant.now());
-    }
+    // Canonical constructor handled by record
 }

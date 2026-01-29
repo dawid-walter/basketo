@@ -1,5 +1,6 @@
 package com.dwalter.basketo.modules.identity.domain.model;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Random;
@@ -15,12 +16,12 @@ public record OneTimePin(String code, Instant expiresAt) {
         }
     }
 
-    public static OneTimePin generate(int validityMinutes) {
+    public static OneTimePin generate(int validityMinutes, Clock clock) {
         String code = String.format("%06d", RANDOM.nextInt(1000000));
-        return new OneTimePin(code, Instant.now().plusSeconds(validityMinutes * 60L));
+        return new OneTimePin(code, Instant.now(clock).plusSeconds(validityMinutes * 60L));
     }
 
-    public boolean isValid(String inputCode) {
-        return this.code.equals(inputCode) && Instant.now().isBefore(expiresAt);
+    public boolean isValid(String inputCode, Clock clock) {
+        return this.code.equals(inputCode) && Instant.now(clock).isBefore(expiresAt);
     }
 }

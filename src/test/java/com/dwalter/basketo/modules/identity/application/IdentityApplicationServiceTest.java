@@ -3,11 +3,15 @@ package com.dwalter.basketo.modules.identity.application;
 import com.dwalter.basketo.modules.identity.domain.events.PinGeneratedEvent;
 import com.dwalter.basketo.modules.identity.domain.model.Email;
 import com.dwalter.basketo.modules.identity.domain.model.User;
+import com.dwalter.basketo.modules.identity.domain.ports.PinHasher;
 import com.dwalter.basketo.modules.identity.domain.ports.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,13 +24,17 @@ class IdentityApplicationServiceTest {
 
     private IdentityApplicationService service;
     private InMemoryUserRepository userRepository;
+    private FakePinHasher pinHasher;
     private FakeEventPublisher eventPublisher;
+    private Clock clock;
 
     @BeforeEach
     void setUp() {
         userRepository = new InMemoryUserRepository();
+        pinHasher = new FakePinHasher();
         eventPublisher = new FakeEventPublisher();
-        service = new IdentityApplicationService(userRepository, eventPublisher);
+        clock = Clock.fixed(Instant.parse("2026-01-01T12:00:00Z"), ZoneId.of("UTC"));
+        service = new IdentityApplicationService(userRepository, pinHasher, eventPublisher, clock);
     }
 
     @Test
@@ -62,19 +70,35 @@ class IdentityApplicationServiceTest {
     }
 
     @Test
-    void shouldNotVerifyIncorrectPin() {
+    void shouldNotVerifyExpiredPin() {
         // given
         String email = "test@example.com";
         service.requestLoginPin(email);
+        String sentPin = eventPublisher.getLastEvent(PinGeneratedEvent.class).pin();
 
-        // when
-        boolean isVerified = service.verifyPin(email, "000000");
+        // when move time forward 20 minutes (validity is 15)
+        Clock futureClock = Clock.fixed(Instant.parse("2026-01-01T12:20:00Z"), ZoneId.of("UTC"));
+        IdentityApplicationService futureService = new IdentityApplicationService(userRepository, pinHasher, eventPublisher, futureClock);
+        
+        boolean isVerified = futureService.verifyPin(email, sentPin);
 
         // then
         assertThat(isVerified).isFalse();
     }
 
     // --- Fakes ---
+
+    private static class FakePinHasher implements PinHasher {
+        @Override
+        public String hash(String rawPin) {
+            return "hashed_" + rawPin;
+        }
+
+        @Override
+        public boolean matches(String rawPin, String hashedPin) {
+            return hashedPin.equals("hashed_" + rawPin);
+        }
+    }
 
     private static class InMemoryUserRepository implements UserRepository {
         private final Map<Email, User> users = new HashMap<>();

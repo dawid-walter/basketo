@@ -27,19 +27,20 @@ class JpaUserRepositoryAdapter implements UserRepository {
     }
 
     private User mapToDomain(UserJpaEntity entity) {
-        OneTimePin pin = null;
-        if (entity.getPinCode() != null) {
-            pin = new OneTimePin(entity.getPinCode(), entity.getPinExpiresAt());
-        }
-        return User.restore(entity.getId(), new Email(entity.getEmail()), pin);
+        return User.restore(
+                entity.getId(),
+                new Email(entity.getEmail()),
+                entity.getPinCode(),
+                entity.getPinExpiresAt()
+        );
     }
 
     private UserJpaEntity mapToJpa(User user) {
         return new UserJpaEntity(
                 user.getId(),
                 user.getEmail().value(),
-                user.getCurrentPin() != null ? user.getCurrentPin().code() : null,
-                user.getCurrentPin() != null ? user.getCurrentPin().expiresAt() : null
+                user.getHashedPin(),
+                user.getPinExpiresAt()
         );
     }
 }
