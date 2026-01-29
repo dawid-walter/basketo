@@ -5,6 +5,7 @@ import com.dwalter.basketo.shared.domain.DomainEvent;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,10 +13,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PaymentTest {
 
+    private final Clock clock = Clock.systemUTC();
+
     @Test
     void shouldCompletePayment() {
         // given
-        Payment payment = new Payment(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, "PLN");
+        Payment payment = new Payment(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, "PLN", clock);
         String externalId = "txn_12345";
 
         // when
@@ -36,7 +39,7 @@ class PaymentTest {
     @Test
     void shouldBeIdempotentWhenCompletingTwice() {
         // given
-        Payment payment = new Payment(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, "PLN");
+        Payment payment = new Payment(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, "PLN", clock);
         payment.complete("txn_1");
         
         // when

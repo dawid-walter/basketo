@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.util.UUID;
 
 @Service
@@ -17,6 +18,7 @@ public class PaymentApplicationService {
     private final PaymentRepository paymentRepository;
     private final PaymentGateway paymentGateway;
     private final ApplicationEventPublisher eventPublisher;
+    private final Clock clock;
 
     @Transactional
     public void initPayment(UUID orderId, BigDecimal amount, String currency) {
@@ -24,7 +26,7 @@ public class PaymentApplicationService {
             return; // Payment already initiated for this order
         }
 
-        Payment payment = new Payment(UUID.randomUUID(), orderId, amount, currency);
+        Payment payment = new Payment(UUID.randomUUID(), orderId, amount, currency, clock);
         paymentRepository.save(payment);
         
         String link = paymentGateway.initiatePayment(payment);

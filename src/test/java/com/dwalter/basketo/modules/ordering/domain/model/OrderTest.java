@@ -5,6 +5,7 @@ import com.dwalter.basketo.shared.domain.DomainEvent;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,6 +14,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class OrderTest {
 
+    private final Clock clock = Clock.systemUTC();
+
     @Test
     void shouldCalculateTotalAmount() {
         // given
@@ -20,7 +23,7 @@ class OrderTest {
         OrderItem item2 = new OrderItem(UUID.randomUUID(), "Product 2", 1, new BigDecimal("50.00"), "PLN");
         
         // when
-        Order order = Order.create("test@example.com", List.of(item1, item2));
+        Order order = Order.create("test@example.com", List.of(item1, item2), clock);
 
         // then
         // (2 * 100) + (1 * 50) = 250
@@ -31,7 +34,7 @@ class OrderTest {
     @Test
     void shouldCreateOrderWithStatusCreated() {
         // when
-        Order order = Order.create("test@example.com", List.of());
+        Order order = Order.create("test@example.com", List.of(), clock);
 
         // then
         assertThat(order.getStatus()).isEqualTo(OrderStatus.CREATED);
@@ -40,7 +43,7 @@ class OrderTest {
     @Test
     void shouldEmitOrderCreatedEvent() {
         // when
-        Order order = Order.create("test@example.com", List.of());
+        Order order = Order.create("test@example.com", List.of(), clock);
 
         // then
         List<DomainEvent> events = order.getDomainEvents();
@@ -53,7 +56,7 @@ class OrderTest {
     @Test
     void shouldMarkOrderAsPaid() {
         // given
-        Order order = Order.create("test@example.com", List.of());
+        Order order = Order.create("test@example.com", List.of(), clock);
 
         // when
         order.markAsPaid();

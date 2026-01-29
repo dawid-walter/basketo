@@ -4,6 +4,7 @@ import com.dwalter.basketo.modules.ordering.domain.events.OrderCreatedEvent;
 import com.dwalter.basketo.shared.domain.AggregateRoot;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -17,14 +18,16 @@ public class Order extends AggregateRoot {
     private final Instant createdAt;
 
     // Constructor for new orders
-    public static Order create(String userEmail, List<OrderItem> items) {
-        Order order = new Order(UUID.randomUUID(), userEmail, items, OrderStatus.CREATED, Instant.now());
+    public static Order create(String userEmail, List<OrderItem> items, Clock clock) {
+        Order order = new Order(UUID.randomUUID(), userEmail, items, OrderStatus.CREATED, Instant.now(clock));
         order.registerEvent(new OrderCreatedEvent(
+                UUID.randomUUID(),
                 order.id,
                 order.userEmail,
                 order.totalAmount(),
                 order.currency(),
-                order.items
+                order.items,
+                order.createdAt
         ));
         return order;
     }
@@ -41,6 +44,7 @@ public class Order extends AggregateRoot {
         this.status = status;
         this.createdAt = createdAt;
     }
+// ...
 
     public BigDecimal totalAmount() {
         return items.stream()

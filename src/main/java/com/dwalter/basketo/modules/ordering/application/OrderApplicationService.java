@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class OrderApplicationService {
     private final OrderRepository orderRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final Clock clock;
 
     @Transactional
     public UUID createOrder(CreateOrderCommand command) {
@@ -30,7 +32,7 @@ public class OrderApplicationService {
                 ))
                 .collect(java.util.stream.Collectors.toList());
 
-        Order order = Order.create(command.userEmail(), items);
+        Order order = Order.create(command.userEmail(), items, clock);
         orderRepository.save(order);
 
         // Publish domain events to Spring Application Context

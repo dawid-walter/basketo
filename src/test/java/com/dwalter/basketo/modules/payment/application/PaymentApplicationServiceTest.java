@@ -14,6 +14,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,12 +38,18 @@ class PaymentApplicationServiceTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private Clock clock;
+
     @InjectMocks
     private PaymentApplicationService service;
 
     @Test
     void shouldInitPayment() {
         // given
+        when(clock.instant()).thenReturn(Instant.parse("2026-01-01T10:00:00Z"));
+        when(clock.getZone()).thenReturn(ZoneId.of("UTC"));
+
         UUID orderId = UUID.randomUUID();
         BigDecimal amount = BigDecimal.TEN;
         String currency = "PLN";
@@ -64,8 +73,11 @@ class PaymentApplicationServiceTest {
     @Test
     void shouldHandlePaymentWebhook() {
         // given
+        // Clock stubbing removed as it is not used in handlePaymentWebhook
+        
         UUID paymentId = UUID.randomUUID();
-        Payment payment = new Payment(paymentId, UUID.randomUUID(), BigDecimal.TEN, "PLN");
+        // Use real clock for test object
+        Payment payment = new Payment(paymentId, UUID.randomUUID(), BigDecimal.TEN, "PLN", Clock.systemUTC());
         
         when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
 

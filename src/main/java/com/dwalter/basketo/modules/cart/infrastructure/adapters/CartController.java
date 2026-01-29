@@ -1,5 +1,7 @@
 package com.dwalter.basketo.modules.cart.infrastructure.adapters;
 
+import com.dwalter.basketo.modules.cart.application.CartApplicationService;
+import com.dwalter.basketo.modules.cart.application.CartApplicationService.CartItemCommand;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
