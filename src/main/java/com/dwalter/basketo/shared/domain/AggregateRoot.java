@@ -1,4 +1,4 @@
-zaproponujpackage com.dwalter.basketo.shared.domain;
+package com.dwalter.basketo.shared.domain;
 
 import java.util.ArrayList;
 import java.util.Collections;
