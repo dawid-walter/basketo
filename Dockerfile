@@ -1,8 +1,26 @@
 # Stage 1: Build
-FROM eclipse-temurin:25-jdk-alpine AS builder
+FROM gradle:8.11-jdk21-alpine AS builder
+
+# Set Gradle user home to a known location for caching
+ENV GRADLE_USER_HOME=/cache/gradle
+
 WORKDIR /app
-COPY . .
-RUN chmod +x gradlew && ./gradlew bootJar --no-daemon
+
+# Copy only dependency-related files first (for better caching)
+COPY build.gradle settings.gradle ./
+COPY gradle gradle
+
+# Download dependencies in a separate layer (will be cached)
+# Using --refresh-dependencies to ensure we get all deps
+RUN --mount=type=cache,target=/cache/gradle \
+    gradle dependencies --no-daemon --refresh-dependencies || true
+
+# Now copy source code (changes here won't invalidate dependency cache)
+COPY src src
+
+# Build the application (reuse cached dependencies)
+RUN --mount=type=cache,target=/cache/gradle \
+    gradle bootJar --no-daemon
 
 # Stage 2: Run
 FROM eclipse-temurin:25-jre-alpine
