@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM gradle:8.11-jdk21-alpine AS builder
+FROM gradle:9.3.1-jdk25-alpine AS builder
 
 # Set Gradle user home to a known location for caching
 ENV GRADLE_USER_HOME=/cache/gradle
