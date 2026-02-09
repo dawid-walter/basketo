@@ -78,4 +78,21 @@ public class IdentityApplicationService {
                 .map(user -> user.verifyPin(pinCode, pinHasher, clock))
                 .orElse(false);
     }
+
+    /**
+     * Verify PIN using order number instead of email.
+     * Finds the email associated with the order and verifies the PIN.
+     */
+    @Transactional(readOnly = true)
+    public VerifyPinByOrderResult verifyPinByOrderNumber(String orderNumber, String pinCode) {
+        Order order = orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderNumber));
+
+        String email = order.getUserEmail();
+        boolean isValid = verifyPin(email, pinCode);
+
+        return new VerifyPinByOrderResult(isValid, isValid ? email : null);
+    }
+
+    public record VerifyPinByOrderResult(boolean isValid, String email) {}
 }

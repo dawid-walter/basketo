@@ -6,10 +6,13 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -20,36 +23,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String path = request.getRequestURI();
-        
-        // Public endpoints: /auth/*, /carts/*, /payments/*, /api/admin/login
-        if (!path.startsWith("/api/orders") && !path.startsWith("/api/admin")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        
-        if (path.equals("/api/admin/login")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String authHeader = request.getHeader("Authorization");
+
+        // If no Authorization header, continue (Spring Security will handle it)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Missing or invalid Authorization header");
+            filterChain.doFilter(request, response);
             return;
         }
 
-        String token = authHeader.substring(7);
-        String email = jwtUtils.validateAndGetEmail(token);
-        String role = jwtUtils.getRole(token);
+        try {
+            String token = authHeader.substring(7);
+            String email = jwtUtils.validateAndGetEmail(token);
+            String role = jwtUtils.getRole(token);
 
-        if (email == null) {
-            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid Token");
-            return;
+            if (email != null) {
+                // Create Spring Security Authentication
+                var authorities = Collections.singletonList(
+                    new SimpleGrantedAuthority(role != null ? role : "ROLE_USER")
+                );
+                var authentication = new UsernamePasswordAuthenticationToken(
+                    email,
+                    null,
+                    authorities
+                );
+
+                // Set authentication in Spring Security context
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                // Also set as request attributes for backward compatibility
+                request.setAttribute("userEmail", email);
+                request.setAttribute("userRole", role);
+            }
+        } catch (Exception e) {
+            // If token is invalid, let Spring Security handle it
+            logger.warn("JWT validation failed: " + e.getMessage());
         }
 
-        request.setAttribute("userEmail", email);
-        request.setAttribute("userRole", role);
         filterChain.doFilter(request, response);
     }
 }

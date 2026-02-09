@@ -35,8 +35,19 @@ class AuthController {
         return ResponseEntity.status(401).body(new VerifyResponse(false, null));
     }
 
+    @PostMapping("/verify-by-order")
+    public ResponseEntity<VerifyResponse> verifyByOrder(@RequestBody VerifyByOrderRequest request) {
+        var result = identityService.verifyPinByOrderNumber(request.orderNumber(), request.pin());
+        if (result.isValid()) {
+            String token = jwtUtils.generateToken(result.email());
+            return ResponseEntity.ok(new VerifyResponse(true, token));
+        }
+        return ResponseEntity.status(401).body(new VerifyResponse(false, null));
+    }
+
     record LoginRequest(String email) {}
     record RequestPinByOrderRequest(String orderNumber) {}
     record VerifyRequest(String email, String pin) {}
+    record VerifyByOrderRequest(String orderNumber, String pin) {}
     record VerifyResponse(boolean success, String accessToken) {}
 }
