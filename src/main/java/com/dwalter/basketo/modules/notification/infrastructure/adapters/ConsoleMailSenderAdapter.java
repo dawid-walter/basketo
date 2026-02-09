@@ -3,6 +3,7 @@ package com.dwalter.basketo.modules.notification.infrastructure.adapters;
 import com.dwalter.basketo.modules.notification.domain.ports.MailSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -12,6 +13,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "app.mail.mode", havingValue = "console", matchIfMissing = true)
 class ConsoleMailSenderAdapter implements MailSender {
 
     private final TemplateEngine templateEngine;
