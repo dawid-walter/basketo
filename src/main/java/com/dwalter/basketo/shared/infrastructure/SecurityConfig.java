@@ -40,10 +40,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*")); // In production, replace with specific origins
+        // Allow both demo shop and shopper-order frontends
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173", // basketo-shopper-order
+                "http://localhost:5174", // basketo-demo
+                "http://localhost:3000"  // alternative dev port
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(false); // Must be false when allowedOrigins is "*"
+        configuration.setAllowCredentials(true); // Allow credentials (cookies, authorization headers)
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
