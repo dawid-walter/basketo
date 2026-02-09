@@ -16,13 +16,18 @@ class OrderCreatedListener {
     /**
      * Handle order created event synchronously to avoid race conditions
      * when multiple orders are created with the same email.
-     * The find-or-create logic in identityService.requestLoginPin ensures
-     * that we don't try to create duplicate users.
+     *
+     * This ensures the user record exists in the database (find-or-create)
+     * without generating a PIN or sending authentication emails.
+     *
+     * PIN is only generated and sent when the customer explicitly requests
+     * it through the order tracking interface (via /api/auth/request-pin-by-order).
      */
     @EventListener
     @Transactional
     public void handle(OrderCreatedEvent event) {
-        // Automatically create account/send PIN when order is created
-        identityService.requestLoginPin(event.userEmail());
+        // Ensure user exists without generating PIN
+        // Order confirmation email is sent by NotificationEventListener
+        identityService.ensureUserExists(event.userEmail());
     }
 }

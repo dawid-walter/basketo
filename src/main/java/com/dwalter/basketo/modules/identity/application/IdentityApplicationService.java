@@ -22,6 +22,30 @@ public class IdentityApplicationService {
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
+    /**
+     * Ensures user exists in the database (find-or-create).
+     * Does NOT generate PIN or send email - used when creating orders.
+     */
+    @Transactional
+    public void ensureUserExists(String emailValue) {
+        Email email = new Email(emailValue);
+
+        userRepository.findByEmail(email)
+                .orElseGet(() -> {
+                    User newUser = User.register(email, clock);
+                    userRepository.save(newUser);
+                    // Note: UserRegisteredEvent is emitted but no PIN is generated
+                    newUser.getDomainEvents().forEach(eventPublisher::publishEvent);
+                    newUser.clearDomainEvents();
+                    return newUser;
+                });
+    }
+
+    /**
+     * Requests a login PIN to be sent to the user's email.
+     * Generates a new PIN and triggers PinGeneratedEvent which sends the email.
+     * Used when user wants to log in to view their orders.
+     */
     @Transactional
     public void requestLoginPin(String emailValue) {
         Email email = new Email(emailValue);
