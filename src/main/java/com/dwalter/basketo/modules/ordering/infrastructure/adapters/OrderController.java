@@ -25,15 +25,38 @@ class OrderController {
     public List<OrderResponse> getOrders(HttpServletRequest request) {
         String email = (String) request.getAttribute("userEmail");
         // Optional: validate if email is not null (though filter ensures it)
-        
+
         return orderService.getUserOrders(email).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/by-number/{orderNumber}")
+    public OrderResponse getOrderByNumber(@PathVariable String orderNumber) {
+        Order order = orderService.getOrderByNumber(orderNumber);
+        return toResponse(order);
+    }
+
     private OrderResponse toResponse(Order order) {
+        ShippingAddressDto shippingDto = null;
+        if (order.getShippingAddress() != null) {
+            var shipping = order.getShippingAddress();
+            shippingDto = new ShippingAddressDto(
+                    shipping.firstName(),
+                    shipping.lastName(),
+                    shipping.addressLine(),
+                    shipping.city(),
+                    shipping.postalCode(),
+                    shipping.country(),
+                    shipping.phone()
+            );
+        }
+
         return new OrderResponse(
                 order.getId(),
+                order.getOrderNumber(),
+                order.getUserEmail(),
+                shippingDto,
                 order.getStatus(),
                 order.totalAmount(),
                 order.currency(),
@@ -44,6 +67,27 @@ class OrderController {
         );
     }
 
-    record OrderResponse(UUID id, OrderStatus status, BigDecimal totalAmount, String currency, Instant createdAt, List<OrderItemDto> items) {}
+    record OrderResponse(
+            UUID id,
+            String orderNumber,
+            String userEmail,
+            ShippingAddressDto shippingAddress,
+            OrderStatus status,
+            BigDecimal totalAmount,
+            String currency,
+            Instant createdAt,
+            List<OrderItemDto> items
+    ) {}
+
+    record ShippingAddressDto(
+            String firstName,
+            String lastName,
+            String addressLine,
+            String city,
+            String postalCode,
+            String country,
+            String phone
+    ) {}
+
     record OrderItemDto(String productName, int quantity, BigDecimal unitPrice) {}
 }

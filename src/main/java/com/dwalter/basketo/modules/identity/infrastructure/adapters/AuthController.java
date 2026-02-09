@@ -19,6 +19,12 @@ class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/request-pin-by-order")
+    public ResponseEntity<Void> requestPinByOrder(@RequestBody RequestPinByOrderRequest request) {
+        identityService.requestLoginPinByOrderNumber(request.orderNumber());
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/verify")
     public ResponseEntity<VerifyResponse> verify(@RequestBody VerifyRequest request) {
         boolean isValid = identityService.verifyPin(request.email(), request.pin());
@@ -30,6 +36,7 @@ class AuthController {
     }
 
     record LoginRequest(String email) {}
+    record RequestPinByOrderRequest(String orderNumber) {}
     record VerifyRequest(String email, String pin) {}
     record VerifyResponse(boolean success, String accessToken) {}
 }

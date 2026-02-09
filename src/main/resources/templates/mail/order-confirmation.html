@@ -8,14 +8,26 @@
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
         .total { font-weight: bold; font-size: 18px; }
+        .info-box { background-color: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Order Confirmation</h2>
         <p>Thank you for your order, <span th:text="${email}">user@example.com</span>!</p>
-        <p>Order ID: <strong th:text="${orderId}">#123</strong></p>
-        
+        <p>Order Number: <strong th:text="${orderNumber}">ORDER-123456</strong></p>
+
+        <div class="info-box">
+            <h3>Shipping Address</h3>
+            <p th:if="${shippingAddress}">
+                <span th:text="${shippingAddress.firstName + ' ' + shippingAddress.lastName}">John Doe</span><br/>
+                <span th:text="${shippingAddress.addressLine}">123 Main St</span><br/>
+                <span th:text="${shippingAddress.postalCode + ' ' + shippingAddress.city}">00-000 City</span><br/>
+                <span th:text="${shippingAddress.country}">Country</span><br/>
+                Phone: <span th:text="${shippingAddress.phone}">+48 123 456 789</span>
+            </p>
+        </div>
+
         <table>
             <thead>
                 <tr>
@@ -32,9 +44,14 @@
                 </tr>
             </tbody>
         </table>
-        
+
         <p class="total">Total: <span th:text="${totalAmount + ' ' + currency}">10.00 PLN</span></p>
         <p>Your order status: <strong>CREATED</strong>. You will receive a separate email once the payment is confirmed.</p>
+
+        <div class="info-box">
+            <p><strong>Track your order:</strong></p>
+            <p>You can track your order status using order number: <strong th:text="${orderNumber}">ORDER-123456</strong></p>
+        </div>
     </div>
 </body>
 </html>

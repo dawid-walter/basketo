@@ -42,23 +42,23 @@ public class CartApplicationService {
     }
 
     @Transactional
-    public UUID checkoutCart(UUID cartId) {
+    public CheckoutResult checkoutCart(UUID cartId, com.dwalter.basketo.modules.ordering.domain.model.ShippingAddress shippingAddress) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found: " + cartId));
-        
+
         if (cart.getUserEmail() == null) {
             throw new IllegalStateException("Cart has no user assigned");
         }
 
-        UUID orderId = orderingGateway.createOrder(cart.getUserEmail(), cart.getItems());
-        
-        cart.checkout(orderId);
+        var orderingResult = orderingGateway.createOrder(cart.getUserEmail(), shippingAddress, cart.getItems());
+
+        cart.checkout(orderingResult.orderId());
         cartRepository.save(cart); // Save potential state changes (if any)
-        
+
         cart.getDomainEvents().forEach(eventPublisher::publishEvent);
         cart.clearDomainEvents();
 
-        return orderId;
+        return new CheckoutResult(orderingResult.orderId(), orderingResult.orderNumber());
     }
 
     private CartItem toDomainItem(CartItemCommand cmd) {
@@ -77,4 +77,6 @@ public class CartApplicationService {
             BigDecimal price,
             String currency
     ) {}
+
+    public record CheckoutResult(UUID orderId, String orderNumber) {}
 }

@@ -42,9 +42,22 @@ class CartController {
     }
 
     @PostMapping("/{cartId}/checkout")
-    public ResponseEntity<CheckoutResponse> checkout(@PathVariable UUID cartId) {
-        UUID orderId = cartService.checkoutCart(cartId);
-        return ResponseEntity.ok(new CheckoutResponse(orderId));
+    public ResponseEntity<CheckoutResponse> checkout(
+            @PathVariable UUID cartId,
+            @Valid @RequestBody CheckoutRequest request) {
+
+        var shippingAddress = new com.dwalter.basketo.modules.ordering.domain.model.ShippingAddress(
+                request.shippingAddress().firstName(),
+                request.shippingAddress().lastName(),
+                request.shippingAddress().addressLine(),
+                request.shippingAddress().city(),
+                request.shippingAddress().postalCode(),
+                request.shippingAddress().country(),
+                request.shippingAddress().phone()
+        );
+
+        var result = cartService.checkoutCart(cartId, shippingAddress);
+        return ResponseEntity.ok(new CheckoutResponse(result.orderId(), result.orderNumber()));
     }
 
     record InitCartRequest(
@@ -61,5 +74,18 @@ class CartController {
     ) {}
 
     record InitCartResponse(UUID cartId) {}
-    record CheckoutResponse(UUID orderId) {}
+
+    record CheckoutRequest(@Valid ShippingAddressDto shippingAddress) {}
+
+    record ShippingAddressDto(
+            @NotBlank String firstName,
+            @NotBlank String lastName,
+            @NotBlank String addressLine,
+            @NotBlank String city,
+            @NotBlank String postalCode,
+            @NotBlank String country,
+            @NotBlank String phone
+    ) {}
+
+    record CheckoutResponse(UUID orderId, String orderNumber) {}
 }

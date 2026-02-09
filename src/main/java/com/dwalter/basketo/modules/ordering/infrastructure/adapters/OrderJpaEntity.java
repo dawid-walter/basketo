@@ -19,18 +19,30 @@ import java.util.UUID;
 class OrderJpaEntity {
     @Id
     private UUID id;
+    @Column(nullable = false, unique = true)
+    private String orderNumber;
     private String userEmail;
-    
+
+    // Shipping Address fields
+    private String shippingFirstName;
+    private String shippingLastName;
+    private String shippingAddressLine;
+    private String shippingCity;
+    private String shippingPostalCode;
+    private String shippingCountry;
+    private String shippingPhone;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
-    
+
     private Instant createdAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItemJpaEntity> items = new ArrayList<>();
 
-    public OrderJpaEntity(UUID id, String userEmail, OrderStatus status, Instant createdAt) {
+    public OrderJpaEntity(UUID id, String orderNumber, String userEmail, OrderStatus status, Instant createdAt) {
         this.id = id;
+        this.orderNumber = orderNumber;
         this.userEmail = userEmail;
         this.status = status;
         this.createdAt = createdAt;

@@ -5,4 +5,5 @@ import java.util.UUID;
 
 interface SpringDataOrderRepository extends JpaRepository<OrderJpaEntity, UUID> {
     java.util.List<OrderJpaEntity> findByUserEmail(String email);
+    java.util.Optional<OrderJpaEntity> findByOrderNumber(String orderNumber);
 }

@@ -31,17 +31,32 @@ class NotificationEventListener {
     @Async
     @EventListener
     public void handle(OrderCreatedEvent event) {
+        var templateVars = new java.util.HashMap<String, Object>();
+        templateVars.put("email", event.userEmail());
+        templateVars.put("orderId", event.orderId());
+        templateVars.put("orderNumber", event.orderNumber());
+        templateVars.put("items", event.items());
+        templateVars.put("totalAmount", event.totalAmount());
+        templateVars.put("currency", event.currency());
+
+        if (event.shippingAddress() != null) {
+            var shipping = event.shippingAddress();
+            templateVars.put("shippingAddress", Map.of(
+                    "firstName", shipping.firstName(),
+                    "lastName", shipping.lastName(),
+                    "addressLine", shipping.addressLine(),
+                    "city", shipping.city(),
+                    "postalCode", shipping.postalCode(),
+                    "country", shipping.country(),
+                    "phone", shipping.phone()
+            ));
+        }
+
         mailSender.sendHtml(
                 event.userEmail(),
                 "Order Confirmation",
                 "order-confirmation",
-                Map.of(
-                        "email", event.userEmail(),
-                        "orderId", event.orderId(),
-                        "items", event.items(),
-                        "totalAmount", event.totalAmount(),
-                        "currency", event.currency()
-                )
+                templateVars
         );
     }
 

@@ -2,6 +2,7 @@ package com.dwalter.basketo.modules.ordering.infrastructure.adapters;
 
 import com.dwalter.basketo.modules.ordering.domain.model.Order;
 import com.dwalter.basketo.modules.ordering.domain.model.OrderItem;
+import com.dwalter.basketo.modules.ordering.domain.model.ShippingAddress;
 import com.dwalter.basketo.modules.ordering.domain.ports.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,11 @@ class JpaOrderRepositoryAdapter implements OrderRepository {
     }
 
     @Override
+    public Optional<Order> findByOrderNumber(String orderNumber) {
+        return repository.findByOrderNumber(orderNumber).map(this::mapToDomain);
+    }
+
+    @Override
     public List<Order> findByUserEmail(String email) {
         return repository.findByUserEmail(email).stream()
                 .map(this::mapToDomain)
@@ -35,7 +41,20 @@ class JpaOrderRepositoryAdapter implements OrderRepository {
     }
 
     private OrderJpaEntity mapToJpa(Order order) {
-        OrderJpaEntity entity = new OrderJpaEntity(order.getId(), order.getUserEmail(), order.getStatus(), order.getCreatedAt());
+        OrderJpaEntity entity = new OrderJpaEntity(order.getId(), order.getOrderNumber(), order.getUserEmail(), order.getStatus(), order.getCreatedAt());
+
+        // Map shipping address
+        ShippingAddress shipping = order.getShippingAddress();
+        if (shipping != null) {
+            entity.setShippingFirstName(shipping.firstName());
+            entity.setShippingLastName(shipping.lastName());
+            entity.setShippingAddressLine(shipping.addressLine());
+            entity.setShippingCity(shipping.city());
+            entity.setShippingPostalCode(shipping.postalCode());
+            entity.setShippingCountry(shipping.country());
+            entity.setShippingPhone(shipping.phone());
+        }
+
         List<OrderItemJpaEntity> items = order.getItems().stream()
                 .map(item -> new OrderItemJpaEntity(
                         UUID.randomUUID(),
@@ -61,6 +80,21 @@ class JpaOrderRepositoryAdapter implements OrderRepository {
                         item.getCurrency()
                 ))
                 .collect(Collectors.toList());
-        return Order.restore(entity.getId(), entity.getUserEmail(), items, entity.getStatus(), entity.getCreatedAt());
+
+        // Map shipping address
+        ShippingAddress shippingAddress = null;
+        if (entity.getShippingFirstName() != null) {
+            shippingAddress = new ShippingAddress(
+                    entity.getShippingFirstName(),
+                    entity.getShippingLastName(),
+                    entity.getShippingAddressLine(),
+                    entity.getShippingCity(),
+                    entity.getShippingPostalCode(),
+                    entity.getShippingCountry(),
+                    entity.getShippingPhone()
+            );
+        }
+
+        return Order.restore(entity.getId(), entity.getOrderNumber(), entity.getUserEmail(), shippingAddress, items, entity.getStatus(), entity.getCreatedAt());
     }
 }
